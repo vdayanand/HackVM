@@ -1,4 +1,3 @@
-TOKENS = []
 @enum TokenType begin
     PUSH
     POP
@@ -7,6 +6,7 @@ TOKENS = []
     INTEGER
     CHAR
     EOF
+    NULL
 end
 
 struct Token
@@ -16,7 +16,7 @@ end
 
 source_file = ARGS[1]
 source = open(source_file) do f
-    readchomp(f)
+    read(f, String)
 end
 
 line_index = 1
@@ -24,10 +24,14 @@ char_index = 1
 
 function read_next()
     token_value = ""
-    token_type = EOF
+    token_type = NULL
+
     global char_index
     while(char_index <= length(source))
         if isspace(source[char_index])
+            if(source[char_index] == '\n')
+                line_index += 1
+            end
             if isempty(token_value)
                 char_index += 1;
                 continue
@@ -40,6 +44,8 @@ function read_next()
                     token_type = ADD
                 elseif token_value == "constant"
                     token_type = CONSTANT
+                elseif token_type == NULL
+                   @error "Tokenizer: Unrecognized token $token_value at $(line_index):$(char_index)"
                 end
                 char_index += 1;
                 return Token(token_type, token_value)
@@ -55,16 +61,18 @@ function read_next()
         token_value *= source[char_index]
         char_index += 1;
     end
-
+    token_type == NULL && (token_type = EOF)
     return Token(token_type, token_value)
 end
 
 function main()
     token_list = []
     token = read_next()
+    @show token
     while(!(token.tokentype == EOF))
         push!(token_list, token)
         token = read_next()
+        @show token
     end
     @info token_list
 end
