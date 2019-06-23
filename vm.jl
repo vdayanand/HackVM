@@ -1,7 +1,6 @@
-module VM
 include("Tokenizer.jl")
-using Tokenizer: Token
-#include("parser.jl")
-#tokens = Tokenizer.main()
-#instructions = Parser.main(tokens)
-end
+include("Parser.jl")
+using Main.Tokenizer
+using Main.Parser
+tokens = Tokenizer.main()
+instructions = Parser.main(tokens)

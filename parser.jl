@@ -1,6 +1,7 @@
 module Parser
 
-using Tokenizer: Token
+using  Main.Tokenizer
+
 struct VarType
     value::String
 end
@@ -21,65 +22,77 @@ end
 struct IADD <: Instruction
 end
 
+struct INULL <: Instruction
+end
+
 t_index = 1
 
 function parse_push(tokens)
-    vartype = if tokens[t_index + 1].token_type == VARTYPE
-        tokens[t_index + 1].token_value
+    global t_index
+    vartype = if tokens[t_index + 1].token_type == Tokenizer.VARTYPE
+        tokens[t_index+1].token_value
     else
         error("ParseError: illegal arguments for PUSH")
     end
-    value = if tokens[t_index + 2].token_type == INTEGER || tokens[t_index + 2].token_type == CHAR
-        tokens[t_index + 2].token_value
+    value = if tokens[t_index + 2].token_type == Tokenizer.INTEGER || tokens[t_index + 1].token_type == Tokenizer.CHAR
+        parse(Int64, (tokens[t_index+2].token_value))
     else
        error("ParseError: illegal arguments for PUSH")
     end
-    return IPUSH(vartype, value)
+    t_index +=  2
+    return IPUSH(VarType(vartype), value)
 end
 
-function parse_pop()
-    itype = POP
-    vartype = if typeof(tokens[t_index + 1]) == VARTYPE
-        tokens[t_index + 1].token_value
+function parse_pop(tokens)
+    global t_index
+    vartype = if typeof(tokens[t_index+1]) == Tokenizer.VARTYPE
+        tokens[t_index+1].token_value
     else
         error("ParseError: illegal arguments for PUSH")
     end
-    value = if tokens[t_index + 2].token_type == INTEGER || tokens[t_index + 2].token_type == CHAR
-        tokens[t_index + 1].token_value
+    value = if tokens[t_index+2].token_type == Tokenizer.INTEGER || tokens[t_index + 2].token_type == Tokenizer.81CHAR
+        parse(Int64, (tokens[t_index + 2].token_value))
     else
        error("ParseError: illegal arguments for PUSH")
     end
-    return IPOP(vartype, value)
+    t_index +=  2
+    return IPOP(VarType(vartype), value)
 end
 
 function parse_add(tokens)
-    return ADD()
+    return IADD()
 end
 
 function parseNext(tokens)
     global t_index
     while(t_index <= length(tokens))
-        if tokens[t_index] == PUSH
-            return parse_push(tokens)
-        elseif tokens[t_index] == POP
-            return parse_pop(tokens)
-        elseif tokens[t_index] == ADD
-            return parse_add(tokens)
+        if tokens[t_index].token_type == Tokenizer.PUSH
+            token = parse_push(tokens)
+            t_index += 1
+            return token
+        elseif tokens[t_index].token_type == Tokenizer.POP
+            token = parse_pop(tokens)
+            t_index += 1
+            return token
+        elseif tokens[t_index].token_type == Tokenizer.ADD
+            token = parse_add(tokens)
+            t_index += 1
+            return token
         else
-            error("Parser: Illegal instruction $(token[t_index])")
+            error("Parser: Illegal instruction $(tokens[t_index])")
         end
-        t_index += 1
     end
+    INULL()
 end
 
 function main(tokens::Vector{Token})::Vector{Instruction}
     instructions = Instruction[]
     instruction = parseNext(tokens)
-    while instruction.itype != NULL
-        instruction = parseNext()
+    while typeof(instruction) != INULL
         push!(instructions, instruction)
+        instruction = parseNext(tokens)
     end
-    @info instructrions
+    @show instructions
     return instructions
 end
 

@@ -1,6 +1,6 @@
 module Tokenizer
 
-export Token
+export Token, TokenType
 
 @enum TokenType begin
     PUSH
@@ -15,11 +15,11 @@ end
 
 
 struct Token
-    tokentype::TokenType
-    value::String
+    token_type::TokenType
+    token_value::String
 end
 
-struct Scanner
+mutable struct Scanner
     line_index::Int64
     char_index::Int64
     source::String
@@ -48,7 +48,7 @@ end
 function read_next(scanner)
     token_value = ""
     token_type = NULL
-    source  = Scanner.source
+    source  = scanner.source
     while(scanner.char_index <= length(source))
         if isspace(source[scanner.char_index])
             if isempty(token_value)
@@ -76,11 +76,11 @@ function main()
         read(f, String)
     end
     scanner = Scanner(1, 1, source)
-    token_list = []
+    token_list = Token[]
     token = read_next(scanner)
-    while(!(token.tokentype == EOF))
+    while(!(token.token_type == EOF))
         push!(token_list, token)
-        token = read_next()
+        token = read_next(scanner)
     end
     return token_list
 end
