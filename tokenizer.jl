@@ -32,7 +32,7 @@ function recogize_token(token_value)
         token_type = POP
     elseif token_value == "add"
         token_type = ADD
-    elseif token_value == "constant"
+    elseif token_value == "constant" || token_value == "local"
         token_type = VARTYPE
     elseif isempty(token_value)
         token_type = EOF
